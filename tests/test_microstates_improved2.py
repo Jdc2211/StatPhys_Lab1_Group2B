@@ -1,25 +1,13 @@
-import time
-import tracemalloc
+from src.microstates_improved2 import measure_microstates
 
-def measure_microstates(N):
-    """
-    Measures microstate counting speed using binary shift bounds (1 << N)
-    and direct C-level iteration, bypassing generator frame overhead.
-    """
-    total_states = 1 << N  # Binary bitwise shift calculation of 2^N
+print("N  | Total States (2^N) | Time (s)")
+print("-" * 35)
+
+for N in range(20, 35):
+    count, elapsed = measure_microstates(N)
+    print(f"{N:2d} | {count:18,d} | {elapsed:8.2f}s")
     
-    # 1. Start memory tracking and high-precision timer
-    tracemalloc.start()
-    start_time = time.perf_counter()
-    
-    # 2. Direct C-level loop (bypasses yield frame context switching)
-    count = sum(1 for _ in range(total_states))
-    
-    # 3. Stop timer and memory tracking
-    elapsed_time = time.perf_counter() - start_time
-    _, peak_bytes = tracemalloc.get_traced_memory()
-    tracemalloc.stop()
-    
-    peak_ram_mb = peak_bytes / (1024 * 1024)
-    
-    return count, elapsed_time, peak_ram_mb
+    # Stop if a single N takes longer than 5 minutes (300 seconds)
+    if elapsed > 300:
+        print("\nReached 5-minute limit!")
+        break
