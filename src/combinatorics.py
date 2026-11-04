@@ -4,15 +4,11 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import os
 
-os.makedirs("report/figures", exist_ok=True)
-
-# 1. Exact Integer(Small N)
 def omega_exact(N, k):
-    """Calculate the multiplicity Omega(N, k) exact by integers (for small N)."""
+    """Calcula la multiplicidad Omega(N, k) exacta mediante enteros (para N pequeños)."""
     if k < 0 or k > N:
         return 0
-    k = min(k, N - k)#heads k trails N-k,  symmetry Omega(N, k) = Omega(N, N - k) so calculation time can be reduced
-    if k == 0:
+    if k == 0 or k == N:
         return 1
     num, den = 1, 1
     for i in range(1, k + 1):#binomial coefficient
@@ -146,8 +142,3 @@ if __name__ == "__main__":
         fig3 = plot_probability_distribution_fraction()
         pdf.savefig(fig3)
         plt.close(fig3)
-plt.xlabel("k (Number of Heads)")
-plt.ylabel("Probability P(k)")
-plt.legend()
-plt.grid(True)
-plt.show()
