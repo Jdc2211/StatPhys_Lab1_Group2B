@@ -14,7 +14,7 @@ def omega_exact(N, k):
     k = min(k, N - k)#heads k trails N-k,  symmetry Omega(N, k) = Omega(N, N - k) so calculation time can be reduced
     if k == 0:
         return 1
-    num, den = 1, 
+    num, den = 1, 1
     for i in range(1, k + 1):#binomial coefficient
         num *= (N - (k - i))
         den *= i
