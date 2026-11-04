@@ -67,7 +67,7 @@ def plot_probability_distributions(N_list=[20, 50, 80, 100]):
         probs = np.exp(ln_probs)
         plt.plot(k_vals / N, probs, label=f"N = {N}")
     
-    plt.xlabel("Fracción de Caras (k / N)")
+    plt.xlabel("Heads Fraction(k / N)")
     plt.ylabel("Probabilidad P(k)")
     plt.title("Distribución de Probabilidad de Macroestados (Espacio Logarítmico)")
     plt.legend()
