@@ -36,7 +36,7 @@ def test_omega_exact_out_of_range():
     assert omega_exact(10, 11) == 0
 
 def test_sum_of_multiplicities_is_2N():
-    """sum_k Omega(N,k) = 2^N (binomio con a=b=1), exacto en enteros."""
+    """sum_k Omega(N,k) = 2^N"""
     for N in (5, 7, 100, 150):
         assert sum(omega_exact(N, k) for k in range(N + 1)) == 2 ** N
 
@@ -90,7 +90,7 @@ def test_stirling_edges_are_exact():
 #N limits 
 
 def test_factorial_float_limit_N170():
-    """N! no cabe en float64 a partir de N = 171."""
+    """N! does not fit in float64 up from N = 171."""
     assert np.isfinite(float(math.factorial(170)))
     with pytest.raises(OverflowError):
         float(math.factorial(171))
@@ -102,18 +102,18 @@ def test_ln_omega_matches_math_comb_at_1029():
     assert ln_omega_logspace(N, k) == pytest.approx(math.log(math.comb(N, k)), rel=1e-12)
 
 def test_omega_float_limit_N1029_vs_N1030():
-    """Omega(N, N/2) deja de caber en float64 entre N = 1029 y N = 1030."""
+    """Omega(N, N/2) stops fitting in float64 between N = 1029 y N = 1030."""
     assert np.isfinite(omega_logspace(1029, 514))
     assert omega_logspace(1029, 514) == pytest.approx(math.comb(1029, 514), rel=1e-10)
     with pytest.warns(RuntimeWarning):
         assert np.isinf(omega_logspace(1030, 515))
 
 def test_ln_omega_never_overflows_for_huge_scalar_N():
-    """ln(Omega) es del orden de N ln2: finito mientras N << 1e300."""
+    """ln(Omega) order N ln2: finite while N << 1e300."""
     assert np.isfinite(ln_omega_logspace(1e200, 5e199))
 
 def test_memory_of_distribution_array():
-    """Límite real: guardar los N+1 puntos de P(k) cuesta 8(N+1) bytes."""
+    """storing N+1 points of P(k) costs 8(N+1) bytes."""
     assert array_memory_bytes(10 ** 8) == pytest.approx(8e8, rel=1e-6)       # 0.8 GB
     assert array_memory_bytes(10 ** 12) == pytest.approx(8e12, rel=1e-6)     # 8 TB
     assert array_memory_bytes(10 ** 23) > 1e23                               # ~8e23 B: impossible
@@ -162,6 +162,6 @@ def test_relative_fluctuation_vanishes():
     assert relative_width(1e23) < 1e-11
 
 def test_one_percent_deviation_unlikely():
-    """k = 0.51 N con N = 1e23: ln P ~ -2 N x^2/2 ~ -1e19 (P = 'cero' absoluto)."""
+    """k = 0.51 N con N = 1e23: ln P ~ -2 N x^2/2 ~ -1e19 (P close to 0)."""
     N = 1e23
     assert ln_prob_asymptotic(N, 0.51 * N) < -1e18
