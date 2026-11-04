@@ -4,7 +4,7 @@ This repository contains the code, data analysis, and report generation for **La
 
 ---
 
-## 📦 Project Structure
+## Project Structure
 
 ```text
 .
@@ -34,7 +34,7 @@ This repository contains the code, data analysis, and report generation for **La
 
 ---
 
-## 🛠️ Environment Setup & Installation
+## Environment Setup & Installation
 
 ### Option 1: Conda Environment (Recommended)
 
@@ -58,7 +58,7 @@ pip install numpy matplotlib scipy pytest
 
 ---
 
-## 🚀 Execution & Usage
+## Execution & Usage
 
 ### 1. Run the Main Pipeline
 Execute the main script to generate the dataset output files and plots under the `report/` directory:
@@ -76,7 +76,7 @@ pytest
 
 ---
 
-## 📊 Modules Description
+## Modules Description
 
 - **`src/combinatorics.py`**: Implementation of binomial/multinomial coefficients, analytical multiplicity formulations, and exact state-counting algorithms.
 - **`src/microstates.py`**: State space generation algorithms for multi-particle, multi-level systems under defined constraints.
@@ -84,7 +84,7 @@ pytest
 
 ---
 
-## 📝 License & Authors
+## License & Authors
 
 - **Course:** Statistical Physics
 - **Lab Group:** Group 2B
