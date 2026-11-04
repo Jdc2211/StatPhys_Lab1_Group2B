@@ -1,17 +1,18 @@
-import time
-from src.microstates import generate_microstates
+import pytest
+from src.microstates import (
+    generate_microstates_baseline,
+    generate_microstates_bitwise,
+    measure_microstates_optimized
+)
 
-print("Starting microstate benchmarking from N = 20...\n")
-print(f"{'N':<3} | {'Total States (2^N)':<20} | {'Time (s)':<10} | {'RAM (MB)':<10}")
-print("-" * 52)
+def test_baseline_microstates():
+    states, t, mem = generate_microstates_baseline(3)
+    assert len(states) == 8
 
-for N in range(20, 32):
-    # Call the imported function
-    count, elapsed_time, peak_ram = generate_microstates(N)
+def test_bitwise_microstates():
+    states = list(generate_microstates_bitwise(3))
+    assert len(states) == 8
 
-    print(f"{N:<3} | {count:<20,d} | {elapsed_time:<10.4f} | {peak_ram:<10.4f}")
-
-    # Stop if execution time exceeds 300 seconds (5 minutes)
-    if elapsed_time > 300:
-        print("\n[!] Time limit threshold of 300s exceeded. Stopping.")
-        break
+def test_optimized_microstates():
+    total, t, mem = measure_microstates_optimized(3)
+    assert total == 8
