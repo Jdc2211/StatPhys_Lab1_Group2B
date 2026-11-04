@@ -13,14 +13,7 @@ Below are some examples of the actual prompts submitted to the AI assistants dur
 ### Prompt Example 3: Theoretical Verification
 > *"Why is the memory complexity O(1) for Method 2 and Method 3 even though the loop runs 2^N times? Explain the difference between time complexity and space complexity in lazy evaluation."*
 >
-### Prompt Example 4: Checking mistakes
-> * Pasted our thermodynamics.py and asked "Point possible errors".
-> * Identified entropy_change(N, k) used undefined variables k_1, k_2, and docstrings placed above the def line, so Python did not treat them as docstrings.
 
-### Prompt Example 5: Thermodynamic tests
->* "What do the tests in the  have to check?"
->*  Output: A pytest file comparing every function with math.comb values (probabilities, normalisation, symmetry P_k = P_{N−k}, maximum at N/2, out-of-range states, ΔS, likelihood ratio, waiting time).
-Team action: Added to tests/test_thermodynamics.py, matched function names to our module, executed with python -m pytest -v.
 
 ### Prompt Example 4: Checking mistakes
 > * Pasted our thermodynamics.py and asked "Point possible errors".
