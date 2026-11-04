@@ -1,0 +1,418 @@
+\documentclass[10pt, a4paper]{article}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{longtable,booktabs,amsmath}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small Microstates of a System of Coins}
+\lhead{\small Statistical Physics Lab 1}
+\lfoot{\small UC3M}
+\rfoot{\small Page \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\title{%
+    \includegraphics[width=0.5\linewidth]{uc3mlogo.png}\\[1em]
+    \textbf{Microstates and Macroscopic Thermodynamics of a Binary System}\\ 
+    \large 3rd Year Engineering Physics\\ 
+    Statistical Physics\\ 
+    Laboratory Practice I
+}
+
+\author{\textbf{Group 2B}\\[0.5em]
+Author 1 (NIA: 100553550, GitHub: @Felix553550)\\
+Author 2 (NIA: 100550996, GitHub: @Teresa550)\\
+Author 3 (NIA: 100550623, GitHub: @mrubsan310)\\
+Author 4 (NIA: 100551010, GitHub: @Jdc2211)\\[0.5em]
+Degree in engineering physics, Universidad Carlos III de Madrid}
+
+\date{October 20, 2026}
+
+\begin{document}
+
+\maketitle
+\newpage
+
+\begin{abstract}
+This report investigates the statistical mechanics of a system composed of independent binary elements (unbiased coins) as an exact computational and physical model for discrete two-state assemblies. We present a modular Python implementation that enumerates microstates, calculates binomial distribution frequencies using log-space arithmetic to prevent numerical overflow, and explores scaling behavior as $N \rightarrow 10^{23}$. Additionally, we derive state probabilities, compute Boltzmann entropy variations $\Delta S$, and analyze the thermodynamic limit and micro-reversibility in connection with the Second Law of Thermodynamics.
+\end{abstract}
+
+\noindent\textbf{Repository Link:} \url{https://github.com/Jdc2211/StatPhys_Lab1_Group2B.git}
+
+\section{Introduction \& Objectives}
+The primary objective of this exercise is to model microstates and macroscopic properties of $N$ unbiased binary elements. The total number of microstates for $N$ coins is $2^N$, and the multiplicity $\Omega(N,k)$ of a macrostate with $k$ heads is given by the binomial coefficient:
+\begin{equation}
+\Omega(N,k) = \binom{N}{k} = \frac{N!}{k!(N-k)!}
+\end{equation}
+We evaluate microstate multiplicity, system entropy $S = k_B \ln \Omega$, and the transition to the thermodynamic limit ($N \sim 10^{23}$).
+
+\section{Methodology \& Collaborative Workflow}
+
+\subsection{Environment \& Reproducibility}
+The computational environment was configured using Miniconda (\texttt{Python 3.11}). All dependencies are specified in \texttt{environment.yml} to guarantee cross-platform execution reproducibility.
+
+\subsection{Version Control \& Repository Architecture}
+Collaborative development was managed via GitHub using a Feature-Branch workflow. Code reviews were required before merging Pull Requests into the \texttt{main} branch. The repository layout follows a modular Python structure:
+\begin{itemize}
+    \item \texttt{src/}: Modular logic for microstate iteration, combinatorics, and entropy calculation.
+    \item \texttt{tests/}: Automated unit tests built with \texttt{pytest}.
+    \item \texttt{notebooks/} \& \texttt{report/}: Exploratory plots and \LaTeX{} source.
+\end{itemize}
+Also, reviews were done to all pull requests before merging them to main in order to avoid any possible error and propose improvements.
+
+\section{Computational Analysis of Microstates}
+
+\subsection{Enumeration for $N=7$}
+For $N=7$, the total number of microstates is $2^7 = 128$. Table 1 lists the multiplicity $\Omega(7,k)$ for each macrostate $k \in [0,7]$.
+
+\begin{table}[h]
+\centering
+\caption{Macrostate multiplicity $\Omega(7,k)$ and representative microstates for $N=7$.}
+\vspace{0.5em}
+\begin{tabular}{c c c c}
+\toprule
+\textbf{Macrostate ($k$ heads)} & \textbf{Tails ($7-k$)} & \textbf{Sample Microstate} & $\boldsymbol{\Omega(7,k)}$ \\
+\midrule
+7 & 0 & HHHHHHH & 1 \\
+6 & 1 & HHHHHTT & 7 \\
+5 & 2 & HHHHHTT & 21 \\
+4 & 3 & HHHHTTT & 35 \\
+3 & 4 & HHHTTTT & 35 \\
+2 & 5 & HHTTTTT & 21 \\
+1 & 6 & HTTTTTT & 7 \\
+0 & 7 & TTTTTTT & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Full Enumeration Wall ($2^N$)}
+The microstates counting has been implemented with 3 different methods:
+\begin{itemize}
+    \item The first method consists on storing the microstates on a list using \texttt{itertools.product()}, which creates an iterator. The time complexity is $O(2^N)$, since there are $2^N$ microstates and the work required to construct each microstate is $O(N)$.
+    \item The second method includes bitwise shift, that is, uses binary code to represent the 2-state system and avoid using lists (not efficient). Therefore, the time complexity is $O(2^N)$ because it does not store all individual microstates.
+    \item For the last method, a \texttt{yield} generator has been used. This element stops the execution of the function each time a new microstate is computed, saves its internal state, and returns the value before continuing its execution. This method processes all microstates as in method 1, but it avoids Memory errors. The time complexity is $O(2^N)$. However, the problem with this algorithm is that it has to stop and continue the execution many times, so that increases the time required.
+\end{itemize}
+The results are presented in the following tables:
+
+\begin{table}[H]
+\centering
+\caption{Method 1:Microstate enumeration performance for $N = 20, 25, 30$.}
+\vspace{0.5em}
+\begin{tabular}{c c c c}
+\toprule
+$\mathbf{N}$ & \textbf{Total Microstates ($2^N$)} & \textbf{Execution Time (s)} & \textbf{Memory Usage (MB)} \\
+\midrule
+20 & $1.05 \times 10^6$ & 0.35 s & 0.0012 MB \\
+25 & $3.36 \times 10^7$ & 11.32 s & 0.0013 MB \\
+30 & $1.07 \times 10^9$ & 391.10 s & 0.0014 MB \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Method 2: Microstate enumeration performance for $N = 20, 25, 30$.}
+\vspace{0.5em}
+\begin{tabular}{c c c c}
+\toprule
+$\mathbf{N}$ & \textbf{Total Microstates ($2^N$)} & \textbf{Execution Time (s)} & \textbf{Memory Usage (MB)} \\
+\midrule
+20 & $1.05 \times 10^6$ & 0.23 s & 0.0004 MB \\
+25 & $3.36 \times 10^7$ & 12.35 s & 0.0004 MB \\
+30 & $1.07 \times 10^9$ & 282.36 s & 0.0004 MB \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Method 3:Microstate enumeration performance for $N = 20, 25, 30$.}
+\vspace{0.5em}
+\begin{tabular}{c c c c}
+\toprule
+$\mathbf{N}$ & \textbf{Total Microstates ($2^N$)} & \textbf{Execution Time (s)} & \textbf{Memory Usage (MB)} \\
+\midrule
+20 & $1.05 \times 10^6$ & 0.31 s & 0.0007 MB \\
+25 & $3.36 \times 10^7$ & 19.16 s & 0.0007 MB \\
+30 & $1.07 \times 10^9$ & 399.90 s & 0.0007 MB \\
+\bottomrule
+\end{tabular}
+\end{table}
+As can be seen, the bitwise method (method~2) is the fastest for $N=20$
+and $N=30$ (while for $N=25$ the three methods are within the
+measurement noise), and it is possible to reach up to $N = 30$ in 5 minutes (300 seconds), as it is demonstrated in the corresponding test. This agrees with the time complexities discussed earlier.
+
+
+
+
+    
+\subsection{Macrostate Frequency Distributions ($N=20, 50, 80, 100$)}
+
+
+\newline
+
+The binomial coefficient $N \in \{20, 50, 80, 100\}$ was computed by microstate enumeration, which causes overflow for large N as with the binomial coefficient,
+$$\Omega(N, k) = \binom{N}{k} = \frac{N!}{k!(N-k)!} \quad$$ 
+has a factorial $N!$ that, when N is around 170 or bigger, it gets bigger than the maximum representation available in a 64 bits computer, which goes until the value  $1.79 \times 10^{308}$. 
+
+
+To solve this problem, the logarithm properties can be used and the combinatorial evaluations are mapped into logarithmic space. This has been implemented in a direct combinatorial module in \texttt{src/combinatorics.py} by using the property $\ln(N!) = \ln \Gamma(N + 1) = \texttt{gammaln}(N + 1)$, the logarithmic multiplicity is computed as:
+\begin{equation}
+\ln \Omega(N,k) = \ln \Gamma(N+1) - \ln \Gamma(k+1) - \ln \Gamma(N-k+1)
+\end{equation}
+or, in code, implemented via \texttt{scipy.special.gammaln}:
+\begin{equation}
+    \ln \Omega(N, k) = \text{gammaln}(N + 1) - \text{gammaln}(k + 1) - \text{gammaln}(N - k + 1).
+\end{equation}
+
+This way the code is performing addition and subtraction of logarithms rather than multiplying big factorials so the numerical overflow is eliminated. Consequently, macrostate probability distributions $P(k) = \Omega(N, k) / 2^N$ are evaluated with numerical stability across all scales by the equation:
+\begin{equation}
+    P(k) = \exp\left[ \ln \Omega(N, k) - N \ln 2 \right].
+\end{equation}\label{macropd}
+
+Moreover, from a physical point of view, taking the logarithm directly reflects Boltzmann's entropy formula, $S = k_B \ln \Omega$. While the number of microstates $\Omega$ multiplies when combining systems, physical entropy is extensive and adds together. The natural logarithm turns this multiplication into addition, directly connecting huge microscopic counts to physical thermodynamic entropy.
+
+Figure 1 shows the probability distributions
+$P_k=\Omega(N,k)/2^N$ as a function of the number of heads $k$ for
+$N=20,50,80,100$. Figure 2 shows the same distributions
+as a function of the heads fraction $k/N$, which makes the narrowing of
+the peak with increasing $N$ visible. All values were computed in
+logarithmic space but they are plotted on a linear scale.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{fig1.png}
+    \caption{Macrostate distributions $P_k$ for $N=20, 50, 80, 100$.}
+    \label{fig:Pk}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{fig2.png}
+    \caption{Macrostate distributions $P_k$ vs heads fraction for $N=20, 50, 80, 100$.}
+    \label{fig:omega}
+\end{figure}
+
+\subsection {Maximum Computable $N$ (Distribution}
+
+When evaluating the macrostate multiplicity $\Omega(N, k) = \frac{N!}{k!(N-k)!}$ using standard integer or floating-point arithmetic, the calculation is strictly limited by numerical integer overflow and floating-point overflow as explained in part 3.3 as $171! \approx 1.24 \times 10^{309}$ and the IEEE 754 indicates that the 64-bit Floating Point maximum Finite Value is  $≈ 1.8 \cdot 10^{308} $. 
+
+\newline
+
+In Section 3.2, the full microstate enumeration reached a computational wall at $N \approx 30 - 33$ due to the exponential $\mathcal{O}(2^N)$ scaling of state-space iteration. Now by using direct log-space combinatorics ($\mathcal{O}(N)$), the corresponding macrostate probability $P(k)$ is computed as Eq. \ref{macropd} and the physical limit shifts completely from execution time to floating-point underflow. Converting back to linear probability space with $P(k) = \exp[\ln P(k)]$ causes extreme tail states (where $\ln P(k) < -708.4$) to underflow to exact floating-point zeros ($P(k) < 10^{-308}$). However, macrostates near the central peak ($k \approx N/2$) remain numerically precise. 
+
+\newline
+The limit also starts depending on the memory array. Evaluating $P(k)$ requires instantiating discrete arrays of size $N + 1$. While storing $10^7$ double-precision floats requires only $\approx 80\text{~MB}$ of memory, and having to render millions of discrete data points worsens Matplotlib graphical performance. Beyond $N \approx 10^6$, individual discrete points become physically and computationally redundant. Accordingly with the Central Limit Theorem (to be explained in the next section 3.5), the discrete binomial distribution transitions into a continuous Gaussian probability density function with mean $\mu = N/2$ and standard deviation $\sigma = \sqrt{N}/2$. Consequently, for $N > 10^7$, discrete macrostate frequency calculation is replaced by continuous Gaussian integration around the macroscopic mean.
+
+\newline
+
+To verify the mathematical accuracy and physical properties of the combinatorics module 
+
+(\texttt{src/combinatorics.py}), several automated unit tests were implemented using \texttt{pytest}. The tests validate core combinatorial properties, including exact values against \texttt{math.comb}, out-of-bounds input handling, the microstate sum identity $\sum \Omega(N, k) = 2^N$, state symmetry $\Omega(N, k) = \Omega(N, N - k)$, and probability normalization $\sum P(k) = 1.0$. Additionally, the tests verify Stirling's approximation convergence, and hardware boundaries for the maximum computable N value, confirming factorial overflow at $N = 171$, log-space exactness up to the maximum float limit at $N = 1029$, exponential overflow at $N = 1030$, and array memory scaling up to $N = 10^{12}$ ($8\text{ TB}$). All test passed succesfully.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\linewidth]{fig3.png}
+    \caption{Exponential growth of multiplicity $\Omega(N,k)$ (on a
+logarithmic vertical axis) with bigger N}
+    \label{fig:placeholder}
+\end{figure}
+\subsection{Thermodynamic Limit ($N \rightarrow 10^{23}$)}
+
+ 
+This limit is useful for macroscopic physical systems where the number of particles approaches Avogadro's number where computing individual discrete microstate probabilities one by one is impossible and unnecessary. In the limit $N \rightarrow \infty$, Stirling's approximation ($\ln N! \approx N \ln N - N$) applied for the three factorials in $\Omega(N,k)$ and writing $p=k/N$ gives
+\begin{equation}
+  \ln\Omega(N,k)\simeq N\,H(p)-\tfrac12\ln\!\big[2\pi N p(1-p)\big],
+  \quad H(p)=-p\ln p-(1-p)\ln(1-p).
+\end{equation}
+Expanding around the peak, $p=\tfrac12+x/N$ with $x=k-N/2$, one has
+$H(p)\simeq\ln 2-2x^2/N^2$ and $p(1-p)\simeq\tfrac14$. Dividing by $2^N$,
+\begin{equation}
+  P(k)\simeq\sqrt{\frac{2}{\pi N}}\;
+  \exp\!\left[-\frac{2\,(k-N/2)^2}{N}\right],
+\end{equation}
+so the Sterling formula converts the binomial distribution into a Gaussian distribution centered at $\mu = N/2$ with standard deviation $\sigma = \sqrt{N}/2$. 
+
+An important consequence of the thermodynamic limit are the relative statistical fluctuations, which measure how much the system deviates from its mean equilibrium state ($\mu = N/2$).  The ratio of the standard deviation to the mean is given by:
+\begin{equation}
+    \frac{\sigma}{\mu} = \frac{\sqrt{N}/2}{N/2} = \frac{1}{\sqrt{N}}
+\end{equation}
+So if N increases, the fluctuations become progressively smaller. Computing this relative fluctuation for a macroscopic system of $N = 10^{23}$ particles yields:
+\begin{equation}
+    \frac{\sigma}{\mu} = \frac{1}{\sqrt{10^{23}}} \approx 3.16 \times 10^{-12} \longrightarrow 0
+\end{equation}
+
+
+As the fluctuation becomes 0,  the probability distribution collapses from a broad bell curve into an infinitely sharp Dirac delta peak centered at $k = N/2$. This result connects statistical mechanics to classical thermodynamics, as:.\\ 
+- Macroscopic determinism means that although every individual micro state has the same probability of occurring at the microscopic level, the considerable concentration of micro states around $k = N/2$ entails that in practice the system always works in the same predictable way (equilibrium in the center).
+\\-The Second Law of Thermodynamics explains why everything tends to maximum entropy, because there are so many combinations possible inside the equilibrium state that any other spontaneous change towards less entropy has a probability of happening of 0 in a human time scale.
+
+In the thermodynamic limit ($N \sim 10^{23}$), automated unit tests validate that the code does not make big rounding errors (cancellation errors) with Avogadro's number with the function \texttt{ln_prob_asymptotic}, that the math correctly creates a Gaussian distribution shape and that random fluctuations shrink to very small results  ($\approx 3.16 \times 10^{-12}$). 
+
+\section{Probabilities, Entropy, and Thermodynamics}
+
+\subsection{Parameter Assignment}
+The definition of the parameter $M$ is based on the harmonic average of the last two digits of our academic identifiers: $x_i = 50,\,96,\,23,\,10$;
+
+The harmonic average is computed as:
+\begin{equation}
+M = \frac{n}{\sum_{i=1}^{n} \frac{1}{x_i}} = 23.0024
+\end{equation}
+
+The parameter $N$ yields a total value of $N = 100 + M = 123.0024$, which is rounded to N=123 due to its integer nature as the total number of coins.
+Since $N$ is odd, $N/2 = 61.5$ is not an integer; we take $"half" = \lfloor N/2 \rfloor = 61$. As $\Omega(N,k) = \Omega(N,N-k)$, the macrostate $k=62$ has the same probability, so both are equally the most probable.
+
+
+\subsection{Probability and Entropy Analysis}
+Table~\ref{tab:results} collects the following results for $N = 123$:
+\begin{itemize}
+\item The probabilities of obtaining the macrostates $\Omega(N,30)$ (30 heads) and $\Omega(N,N/2)$ (N/2 = 61 heads): $P_k = \Omega(N,k)/2^N$, evaluated in log-space as $P_k = \exp\!\left[\ln\Omega(N,k) - N\ln 2\right]$.
+\item The cumulative probabilities for the intervals $[N/2 - 10, N/2 + 10]$ and $[N/2 - 20, N/2 + 20]$: $\Delta P_{k_1k_2} = \sum_{k=k_1}^{k_2} P_k$
+\item The change in entropy measured in units of Boltzmann ́ constant: $\Delta S/k_B = ln(\Omega_1 / \Omega_2) $ for $k_1 = N/2 + 25 \rightarrow k_2 = N/2$; $k_1 = N/2 + 10 \rightarrow k_2 = N/2$ and $k_1 = N/2 \rightarrow k_2 = 20$ 
+\end{itemize}
+\begin{table}[h]
+\centering
+\caption{Calculated probability and entropy variations for $N = 123$.}
+\label{tab:results}
+\small
+\begin{tabular}{l c c}
+\toprule
+\textbf{Macrostate / range} & $P$ & $\Delta S/k_B$ \rightarrow $\ln[\frac{\Omega(N, k_1)}{\Omega(N, k_2)}]$ \\
+\midrule
+$k = 30$ heads & 3.7226e-09 & -\\
+$k = N/2 = 61$ heads (Most Probable) & 0.0715 & - \\
+Interval $[N/2-10, N/2+10]=[51,71]$ & 0.9411 & -\\
+Interval $[N/2-20, N/2+20] = [41,81]$ & 0.9998 & -\\
+$k_1 = 86 \rightarrow k_2 = 61$ & - & $ -9.9463$ \\
+$k_1 = 71 \rightarrow k_2 = 61$ & - & $ -1.4573$ \\
+$k_1 = 61 \rightarrow k_2 = 20$ & - & $30.3446$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+The Boltzmann´s Entropy quantifies the uncertainty in the information related to the microstate when only its macroscopic variables are known.
+As it can be appreciated in the showcased results, the larger the multiplicity $\Omega$, the more microstates are compatible with it and the less predictable the configuration is. 
+Thus, the entropy change between two macrostates in units of $k_B$, which quantifies the disorder of the system when passing from one macrostate to the other, is the logarithm of the ratio of their probabilities:
+\begin{equation}
+\frac{\Delta S}{k_B} = \ln\frac{\Omega(N,k_1)}{\Omega(N,k_2)} = \ln\frac{P_{k_1}}{P_{k_2}}.
+\end{equation}
+
+\subsection{Second Law of Thermodynamics Interpretation}
+
+The statistical foundation of the Second Law of Thermodynamics posits that a closed system will overwhelmingly tend toward the macrostate with the highest multiplicity (maximum entropy). To quantitatively justify this, we first analyze the probability of a small system ($N = 123$ coins) spontaneously reaching a highly ordered state, such as obtaining only $k = 8$ heads. 
+
+The multiplicity of this macrostate is given by the binomial coefficient:
+$$\Omega(123, 8) = \frac{123!}{8!(123-8)!} \approx 1.03 \times 10^{12}$$
+
+Given the total number of accessible microstates $\Omega_{\text{tot}} = 2^{123} \approx 1.06 \times 10^{37}$, the probability of this configuration is infinitesimally small:
+$$P(8) = \frac{\Omega(123, 8)}{2^{123}} \approx 3.53 \times 10^{-24}$$
+
+Assuming a tossing rate of $N$ coins per second, the expected waiting time to randomly observe this highly ordered state is the inverse of its probability multiplied by the rate:
+$$\tau = \frac{1}{P(8) \cdot N} \approx 1.03 \times 10^{25} \text{ seconds}$$
+
+Because this required waiting time vastly exceeds the estimated age of the universe ($\sim 4 \times 10^{17}$ s), observing such a spontaneous decrease in entropy is practically impossible.
+
+The dominance of the maximum entropy state can be further quantified by comparing the likelihood of the most probable macrostate ($k = \lfloor 123/2 \rfloor = 61$ heads) against a fluctuation state with $33$ heads ($M+10$, where $M=23$). Using log-space arithmetic to prevent numerical overflow, the respective probabilities are $P(61) \approx 0.0715$ and $P(33) \approx 9.89 \times 10^{-8}$. The likelihood ratio is:
+$$\frac{P(61)}{P(33)} \approx 7.23 \times 10^6$$
+
+This indicates that the equilibrium state is over 7 million times more likely to occur than a moderate fluctuation of 33 heads. Therefore, none of our calculated results contradict the Second Law of Thermodynamics; while spontaneous transitions to lower entropy states have a non-zero mathematical probability for finite $N$, their occurrence is statistically suppressed. Macroscopic irreversibility emerges entirely from this overwhelming microscopic statistical likelihood.
+
+\subsubsection{Re-evaluation in the Large Particle Limit ($N \sim 10^{23}$)}
+Finally, we re-evaluate these quantities (all the ones presented in section 4) for a genuinely macroscopic system at the thermodynamic limit ($N = 10^{23}$). In this regime, the discrete binomial distribution converges to a continuous Gaussian distribution.
+
+The results are presented in the following table:
+
+\begin{table}[htbp]
+\centering 
+\begin{tabular}{lcc}
+\toprule
+\textbf{Quantity / Macrostate} & \textbf{$N = 123$ (Exact)} & \textbf{$N = 10^{23}$ (Macroscopic Limit)} \\
+\midrule
+(a) $P_{30}$ & $3.72 \times 10^{-9}$ & $\sim 10^{-3.01 \times 10^{22}}$ \\
+(b) $P_{N/2} \approx \sqrt{2/(\pi N)}$ & $0.0715$ & $7.98 \times 10^{-12}$ \\
+(c) $\sum P_k(N/2 \pm 10)$ & $0.9411$ & $1.68 \times 10^{-11}$ \\
+(d) $\sum P_k(N/2 \pm 20)$ & $0.9998$ & $3.27 \times 10^{-11}$ \\
+(e) $\Delta S/k_B$ ($N/2+25 \to N/2$) & $-9.95$ & $-1.25 \times 10^{-20}$ \\
+(f) $\Delta S/k_B$ ($N/2+10 \to N/2$) & $-1.46$ & $-2.00 \times 10^{-21}$ \\
+(g) $\Delta S/k_B$ ($N/2 \to 20$) & $+30.34$ & $+6.93 \times 10^{22}$ \\
+(h) Waiting time $t$ for $k=8$ [s] & $2.09 \times 10^{20}$ & $\sim 10^{3.01 \times 10^{22}}$ \\
+(i) Ratio $P_{N/2} / P_{M+10=33}$ & $7.23 \times 10^{6}$ & $\sim 10^{3.01 \times 10^{22}}$ \\
+(i*) Ratio $P_{N/2} / P_{N/2 \pm 10}$ & $4.29$ & $1 + 2 \times 10^{-21}$ \\
+\bottomrule
+\end{tabular}
+\caption{Section 4 parameters for the macroscopic limit and the microscopic system N=123}
+\end{table}
+
+All values are dimensionless except for waiting times. From table 6, different conclusions of the macroscopic limit behaviour can be reached:
+
+\begin{itemize}
+    \item \textbf{Disappearance of Fixed Discrete Windows:} The standard deviation of the Gaussian macrostate distribution scales as $\sigma = \frac{\sqrt{N}}{2} \approx 1.58 \times 10^{11}$. Consequently, a fixed absolute displacement (such as $\pm 10$ or $\pm 20$ coins) becomes infinitesimally narrow relative to $\sigma$, and their cumulative probabilities approach zero ($10^{-11}$ order), just as the height of the most probable state $P_{N/2}$ itself scales down to $\approx 7.98 \times 10^{-12}$.
+    \item \textbf{Insensitivity to Micro-fluctuations:} Shifting the state by a small absolute number of particles (e.g., 10 or 25 coins) from equilibrium in a macroscopic system has a completely negligible entropic cost ($\Delta S / k_B \propto -2 \Delta k^2 / N \to 0$). The equilibrium state and a state with 10 extra heads are thermodynamically indistinguishable.
+    \item \textbf{Extensive Ordered States:} Conversely, fixing a macroscopic fraction of particles away from $N/2$ implies an extensive deviation, leading to waiting times of $\approx 10^{3.01 \times 10^{22}}$ seconds. This hyper-exponential waiting time renders such states physically non-existent.
+\end{itemize}
+
+As $N \to \infty$, the relative fluctuation around the mean $\mu = N/2$ vanishes asymptotically:
+$$\frac{\sigma}{\mu} = \frac{1}{\sqrt{N}} = \frac{1}{\sqrt{10^{23}}} \approx 3.16 \times 10^{-12} \xrightarrow{N \to \infty} 0$$
+
+Thus, micro-reversibility is entirely suppressed. The statistical tendency toward maximum entropy mathematically transitions into an absolute deterministic law, definitively verifying why thermodynamic processes are strictly directional in bulk matter.
+
+\section{Conclusion}
+We computationally modeled and mathematically verified the transition of discrete microstates to macrostate probability distributions. Modern software engineering practices and log-space arithmetic enabled calculations beyond standard integer overflow limits.
+
+\newpage
+\appendix
+\section{AI Collaboration \& Audit Statement}
+In compliance with course policy, AI tools were utilized as code assistants. All generated algorithms were audited and validated using automated tests (\texttt{pytest}). Prompt logs and verification steps are recorded in \texttt{AI-STATEMENT.md} in the repository.
+
+
+\section{Complete Enumeration of the Microstates for $N=7$}
+\label{app:microstates}
+
+Table~\ref{tab:micro7} lists all $2^7=128$ microstates of a system of $N=7$ coins
+($\mathrm{H}$ = heads, $\mathrm{T}$ = tails), grouped by macrostate (number of
+heads $k$). The number of microstates in each group is the multiplicity
+$\Omega(7,k)=\binom{7}{k}$, and the multiplicities add up to
+$\sum_{k=0}^{7}\Omega(7,k)=2^7=128$. Within each macrostate the microstates are
+given in lexicographic order ($\mathrm{H}<\mathrm{T}$).
+
+{\small
+\begin{longtable}{@{}c c c p{0.68\textwidth}@{}}
+\caption{All 128 microstates of $N=7$ coins, grouped by macrostate.}
+\label{tab:micro7}\\
+\toprule
+$k$ (heads) & $7-k$ (tails) & $\Omega(7,k)$ & Microstates \\
+\midrule
+\endfirsthead
+\toprule
+$k$ (heads) & $7-k$ (tails) & $\Omega(7,k)$ & Microstates (continued) \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\emph{Continued on next page}}\\
+\endfoot
+\endlastfoot
+7 & 0 & 1 & \ttfamily HHHHHHH \\
+\midrule
+6 & 1 & 7 & \ttfamily HHHHHHT, HHHHHTH, HHHHTHH, HHHTHHH, HHTHHHH, HTHHHHH, THHHHHH \\
+\midrule
+5 & 2 & 21 & \ttfamily HHHHHTT, HHHHTHT, HHHHTTH, HHHTHHT, HHHTHTH, HHHTTHH, HHTHHHT, HHTHHTH, HHTHTHH, HHTTHHH, HTHHHHT, HTHHHTH, HTHHTHH, HTHTHHH, HTTHHHH, THHHHHT, THHHHTH, THHHTHH, THHTHHH, THTHHHH, TTHHHHH \\
+\midrule
+4 & 3 & 35 & \ttfamily HHHHTTT, HHHTHTT, HHHTTHT, HHHTTTH, HHTHHTT, HHTHTHT, HHTHTTH, HHTTHHT, HHTTHTH, HHTTTHH, HTHHHTT, HTHHTHT, HTHHTTH, HTHTHHT, HTHTHTH, HTHTTHH, HTTHHHT, HTTHHTH, HTTHTHH, HTTTHHH, THHHHTT, THHHTHT, THHHTTH, THHTHHT, THHTHTH, THHTTHH, THTHHHT, THTHHTH, THTHTHH, THTTHHH, TTHHHHT, TTHHHTH, TTHHTHH, TTHTHHH, TTTHHHH \\
+\midrule
+3 & 4 & 35 & \ttfamily HHHTTTT, HHTHTTT, HHTTHTT, HHTTTHT, HHTTTTH, HTHHTTT, HTHTHTT, HTHTTHT, HTHTTTH, HTTHHTT, HTTHTHT, HTTHTTH, HTTTHHT, HTTTHTH, HTTTTHH, THHHTTT, THHTHTT, THHTTHT, THHTTTH, THTHHTT, THTHTHT, THTHTTH, THTTHHT, THTTHTH, THTTTHH, TTHHHTT, TTHHTHT, TTHHTTH, TTHTHHT, TTHTHTH, TTHTTHH, TTTHHHT, TTTHHTH, TTTHTHH, TTTTHHH \\
+\midrule
+2 & 5 & 21 & \ttfamily HHTTTTT, HTHTTTT, HTTHTTT, HTTTHTT, HTTTTHT, HTTTTTH, THHTTTT, THTHTTT, THTTHTT, THTTTHT, THTTTTH, TTHHTTT, TTHTHTT, TTHTTHT, TTHTTTH, TTTHHTT, TTTHTHT, TTTHTTH, TTTTHHT, TTTTHTH, TTTTTHH \\
+\midrule
+1 & 6 & 7 & \ttfamily HTTTTTT, THTTTTT, TTHTTTT, TTTHTTT, TTTTHTT, TTTTTHT, TTTTTTH \\
+\midrule
+0 & 7 & 1 & \ttfamily TTTTTTT \\
+\bottomrule
+\end{longtable}
+}
+
+\end{document}
