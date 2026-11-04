@@ -146,3 +146,8 @@ if __name__ == "__main__":
         fig3 = plot_probability_distribution_fraction()
         pdf.savefig(fig3)
         plt.close(fig3)
+plt.xlabel("k (Number of Heads)")
+plt.ylabel("Probability P(k)")
+plt.legend()
+plt.grid(True)
+plt.show()
