@@ -40,3 +40,7 @@ def compute_results(last_digits=(50, 96, 10, 23)) -> dict:
         "ratio_minus": likelihood_ratio(N, half, half - 10),
         "ratio_plus": likelihood_ratio(N, half, half + 10),
     }
+    
+if __name__ == "__main__":
+    for name, value in compute_results().items():
+        print(f"{name}: {value}")
