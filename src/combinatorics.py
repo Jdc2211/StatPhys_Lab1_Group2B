@@ -1,26 +1,3 @@
-import matplotlib.pyplot as plt
-
-def omega(N, k):
-    if k == 0:
-        return 1
-    num, den = 1, 1
-    for i in range(k):
-        num *= (N - i)
-        den *= (k - i)
-    return num // den
-
-for N in [20, 50, 80, 100]:
-    k_vals = list(range(N + 1))
-    probs = [omega(N, k) / (2**N) for k in k_vals]
-    plt.plot(k_vals, probs, label=f"N = {N}")
-
-plt.xlabel("k (Number of Heads)")
-plt.ylabel("Probability P(k)")
-plt.legend()
-plt.grid(True)
-plt.show()
-
-
 import numpy as np
 from scipy.special import gammaln
 import matplotlib.pyplot as plt
@@ -39,28 +16,46 @@ def omega_exact(N, k):
 
 def ln_omega_logspace(N, k):
     """
-    Calcula ln(Omega(N, k)) en espacio logarítmico usando gammaln
-    para evitar el desbordamiento numérico (integer overflow) cuando N >= 100.
-    Aprovecha la propiedad: ln(N!) = gammaln(N + 1)
+    Calcula ln(Omega(N, k)) en espacio logarítmico usando gammaln.
+    Soporta tanto un único valor k como vectores/arrays de NumPy.
     """
-    if k < 0 or k > N:
-        return -np.inf
-    return gammaln(N + 1) - gammaln(k + 1) - gammaln(N - k + 1)
+    k_arr = np.asarray(k)
+    res = gammaln(N + 1) - gammaln(k_arr + 1) - gammaln(N - k_arr + 1)
+    
+    if np.isscalar(k):
+        if k < 0 or k > N:
+            return -np.inf
+        return float(res)
+    else:
+        invalid = (k_arr < 0) | (k_arr > N)
+        res = res.astype(float)
+        res[invalid] = -np.inf
+        return res
 
 def omega_logspace(N, k):
     """Devuelve la multiplicidad Omega(N, k) convirtiendo desde espacio logarítmico."""
     return np.exp(ln_omega_logspace(N, k))
 
 def ln_stirling(N):
-    """Aproximación de Stirling para ln(N!) ≈ N ln(N) - N (límite termodinámico)."""
-    if N <= 0:
-        return 0.0
-    return N * np.log(N) - N
+    """
+    Aproximación de Stirling completa: ln(N!) ≈ N ln(N) - N + 0.5*ln(2*pi*N).
+    """
+    if np.isscalar(N):
+        if N <= 0:
+            return 0.0
+        return N * np.log(N) - N + 0.5 * np.log(2 * np.pi * N)
+    else:
+        N_arr = np.asarray(N, dtype=float)
+        res = np.zeros_like(N_arr)
+        mask = N_arr > 0
+        res[mask] = N_arr[mask] * np.log(N_arr[mask]) - N_arr[mask] + 0.5 * np.log(2 * np.pi * N_arr[mask])
+        return res
 
 def ln_omega_stirling(N, k):
     """Calcula ln(Omega(N, k)) aplicando la aproximación de Stirling."""
-    if k <= 0 or k >= N:
-        return 0.0
+    if np.isscalar(k):
+        if k <= 0 or k >= N:
+            return 0.0
     return ln_stirling(N) - ln_stirling(k) - ln_stirling(N - k)
 
 def plot_probability_distributions(N_list=[20, 50, 80, 100]):
@@ -68,7 +63,6 @@ def plot_probability_distributions(N_list=[20, 50, 80, 100]):
     plt.figure(figsize=(8, 5))
     for N in N_list:
         k_vals = np.arange(N + 1)
-        # ln P(k) = ln Omega(N, k) - N * ln(2)
         ln_probs = ln_omega_logspace(N, k_vals) - N * np.log(2)
         probs = np.exp(ln_probs)
         plt.plot(k_vals / N, probs, label=f"N = {N}")
@@ -83,5 +77,3 @@ def plot_probability_distributions(N_list=[20, 50, 80, 100]):
 
 if __name__ == "__main__":
     plot_probability_distributions()
-
-    
