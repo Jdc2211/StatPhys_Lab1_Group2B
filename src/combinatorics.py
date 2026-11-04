@@ -11,7 +11,7 @@ def omega_exact(N, k):
     if k == 0 or k == N:
         return 1
     num, den = 1, 1
-    for i in range(1, k + 1):
+    for i in range(1, k + 1):#binomial coefficient
         num *= (N - (k - i))
         den *= i
     return num // den
