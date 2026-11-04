@@ -12,20 +12,13 @@ This repository contains the code, data analysis, and report generation for **La
 ├── README.md                 # Project documentation
 ├── environment.yml           # Conda environment definition
 ├── main.py                   # Main entry point to run full pipeline / analysis
-├── pytest.ini                # Pytest configuration file
-│
 ├── notebooks/                # Exploratory Jupyter Notebooks
 │   └── microstates.ipynb     # Notebook for analyzing microstate distributions
 │
 ├── report/                   # LaTeX report and output artifacts
 │   ├── figures/              # Generated plot files (PDF format)
-│   │   ├── enumeration_time.pdf
-│   │   ├── multiplicity_distribution.pdf
-│   │   └── part2_distribution.pdf
+│   │   ├── combined_figures.pdf
 │   ├── main.tex              # Main LaTeX manuscript
-│   ├── microstates_N7.txt    # Generated microstates raw output (N=7)
-│   ├── multiplicities_1c.txt # Numerical output table for Part 1c
-│   └── table3_part2.txt      # Data summary table for Part 2
 │
 ├── src/                      # Source code modules
 │   ├── __init__.py
