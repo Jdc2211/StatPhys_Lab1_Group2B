@@ -161,7 +161,7 @@ def test_relative_fluctuation_vanishes():
     assert relative_width(1e23) == pytest.approx(3.16e-12, rel=1e-2)
     assert relative_width(1e23) < 1e-11
 
-def test_one_percent_deviation_is_astronomically_unlikely():
+def test_one_percent_deviation_unlikely():
     """k = 0.51 N con N = 1e23: ln P ~ -2 N x^2/2 ~ -1e19 (P = 'cero' absoluto)."""
     N = 1e23
     assert ln_prob_asymptotic(N, 0.51 * N) < -1e18
